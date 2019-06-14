@@ -1,0 +1,237 @@
+package com.lai.mpadnroidchart;
+
+import android.graphics.Color;
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+
+import com.github.mikephil.charting.components.Description;
+import com.github.mikephil.charting.components.Legend;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.components.YAxis;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
+import com.github.mikephil.charting.highlight.Highlight;
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
+import com.github.mikephil.charting.listener.BarLineChartTouchListener;
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
+import com.lai.mpadnroidchart.marker.DetailsMarkerView;
+import com.lai.mpadnroidchart.marker.PositionMarker;
+import com.lai.mpadnroidchart.marker.RoundMarker;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+/**
+ * github:https://github.com/laishujie/MpAdnroidChart
+ */
+public class MainActivity extends AppCompatActivity {
+
+    MyLineChart mLineChart;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        mLineChart = findViewById(R.id.chart);
+
+        findViewById(R.id.btn_show).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                List<ILineDataSet> dataSets = mLineChart.getLineData().getDataSets();
+                for (ILineDataSet set : dataSets)
+                    set.setVisible(!set.isVisible());
+                mLineChart.animateXY(500, 500);
+                mLineChart.invalidate();
+            }
+        });
+
+        findViewById(R.id.btn_update).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                //1,准备要更换的数据
+                List<Entry> entries = new ArrayList<>();
+                for (int i = 0; i < 12; i++)
+                    entries.add(new Entry(i, new Random().nextInt(300)));
+
+                //2. 获取LineDataSet线条数据集
+                List<ILineDataSet> dataSets = mLineChart.getLineData().getDataSets();
+
+                //是否存在
+                if (dataSets != null && dataSets.size() > 0) {
+                    //直接更换数据源
+                    for (ILineDataSet set : dataSets) {
+                        LineDataSet data = (LineDataSet) set;
+                        data.setValues(entries);
+                    }
+                } else {
+                    //重新生成LineDataSet线条数据集
+                    LineDataSet dataSet = new LineDataSet(entries, "Label"); // add entries to dataset
+                    dataSet.setDrawCircles(false);
+                    dataSet.setColor(Color.parseColor("#7d7d7d"));//线条颜色
+                    dataSet.setCircleColor(Color.parseColor("#7d7d7d"));//圆点颜色
+                    dataSet.setLineWidth(1f);//线条宽度
+                    LineData lineData = new LineData(dataSet);
+                    //是否绘制线条上的文字
+                    lineData.setDrawValues(false);
+                    mLineChart.setData(lineData);
+                }
+                //更新
+                mLineChart.invalidate();
+            }
+        });
+
+        findViewById(R.id.btn_delete).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //清空数据
+                mLineChart.getLineData().clearValues();
+                mLineChart.highlightValues(null);
+                mLineChart.invalidate();
+            }
+        });
+
+
+        findViewById(R.id.btn_slide).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                float scaleX = mLineChart.getScaleX();
+                if (scaleX == 1)
+                    mLineChart.zoomToCenter(5, 1f);
+                else {
+                    BarLineChartTouchListener barLineChartTouchListener = (BarLineChartTouchListener) mLineChart.getOnTouchListener();
+                    barLineChartTouchListener.stopDeceleration();
+                    mLineChart.fitScreen();
+                }
+
+                mLineChart.invalidate();
+            }
+        });
+
+        //1.设置x轴和y轴的点
+        List<Entry> entries = new ArrayList<>();
+//        for (int i = 0; i < 7; i++)//<12
+//            entries.add(new Entry(i, new Random().nextInt(300)));
+        entries.add(new Entry(0, (float) 0.0150072076));
+        entries.add(new Entry(1, (float) 0.0138327305));
+        entries.add(new Entry(2, (float) 0.0131802432));
+        entries.add(new Entry(3, (float) 0.0147462127));
+        entries.add(new Entry(4, (float) 0.0156596949));
+        entries.add(new Entry(5, (float) 0.0150072076));
+        entries.add(new Entry(6, (float) 0.0150072076));
+//        String df="0.0151683216";
+//        float a=Float.parseFloat(df);
+//        for (int i = 0; i < 7; i++)
+//        entries.add(new Entry(i,a));
+
+
+        //2.把数据赋值到你的线条
+        LineDataSet dataSet = new LineDataSet(entries, "Label"); // add entries to dataset
+        dataSet.setDrawCircles(false);
+        dataSet.setMode(LineDataSet.Mode.HORIZONTAL_BEZIER);//设置弧形曲线
+        dataSet.setColor(Color.parseColor("#FFC62D"));//线条颜色
+        dataSet.setCircleColor(Color.parseColor("#7d7d7d"));//圆点颜色
+        dataSet.setLineWidth(2f);//线条宽度
+        dataSet.setDrawFilled(true);//折线下是否填充颜色
+        dataSet.setFillDrawable(getResources().getDrawable(R.drawable.fade_orange));//折线下填充颜色
+        mLineChart.setScaleEnabled(false);
+
+        //mLineChart.getLineData().getDataSets().get(0).setVisible(true);
+        //设置样式
+        YAxis rightAxis = mLineChart.getAxisRight();
+        //设置图表右边的y轴禁用
+        rightAxis.setEnabled(false);
+        YAxis leftAxis = mLineChart.getAxisLeft();
+        //设置图表左边的y轴禁用
+        leftAxis.setEnabled(false);
+//        rightAxis.setAxisMaximum(dataSet.getYMax() /1000000000);
+//        leftAxis.setAxisMaximum(dataSet.getYMax() /1000000000);//* 0.000000000000001f
+
+        rightAxis.setAxisMaximum(dataSet.getYMax() *1f);
+        leftAxis.setAxisMaximum(dataSet.getYMax() *1f);//* 0.000000000000001f
+
+        //设置x轴
+        XAxis xAxis = mLineChart.getXAxis();
+        xAxis.setTextColor(Color.parseColor("#333333"));
+        xAxis.setTextSize(11f);
+        xAxis.setAxisMinimum(0f);
+        xAxis.setDrawAxisLine(false);//是否绘制轴线
+        xAxis.setDrawGridLines(false);//设置x轴上每个点对应的线
+        xAxis.setDrawLabels(true);//绘制标签  指x轴上的对应数值
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);//设置x轴的显示位置
+        xAxis.setGranularity(1f);//禁止放大x轴标签重绘
+        List<String> list = new ArrayList<>();
+//        for (int i = 0; i < 12; i++) {
+//            list.add(String.valueOf(i + 1).concat("月"));
+//        }
+        list.add("06-06");
+        list.add("06-07");
+        list.add("06-08");
+        list.add("06-09");
+        list.add("06-10");
+        list.add("06-11");
+        list.add("06-12");
+
+        xAxis.setValueFormatter(new IndexAxisValueFormatter(list));
+
+        //透明化图例
+        Legend legend = mLineChart.getLegend();
+        legend.setForm(Legend.LegendForm.NONE);
+        legend.setTextColor(Color.WHITE);
+        //legend.setYOffset(-2);
+
+        //点击图表坐标监听
+        mLineChart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
+            @Override
+            public void onValueSelected(Entry e, Highlight h) {
+                //查看覆盖物是否被回收
+                if (mLineChart.isMarkerAllNull()) {
+                    //重新绑定覆盖物
+                    createMakerView();
+                    //并且手动高亮覆盖物
+                    mLineChart.highlightValue(h);
+                }
+            }
+
+            @Override
+            public void onNothingSelected() {
+
+            }
+        });
+
+        //隐藏x轴描述
+        Description description = new Description();
+        description.setEnabled(false);
+        mLineChart.setDescription(description);
+
+        //创建覆盖物
+        createMakerView();
+
+        //3.chart设置数据
+        LineData lineData = new LineData(dataSet);
+        //是否绘制线条上的文字
+        lineData.setDrawValues(false);
+        mLineChart.setData(lineData);
+        mLineChart.invalidate(); // refresh
+
+    }
+
+    /**
+     * 创建覆盖物
+     */
+    public void createMakerView() {
+        DetailsMarkerView detailsMarkerView = new DetailsMarkerView(this);
+        detailsMarkerView.setChartView(mLineChart);
+        mLineChart.setDetailsMarkerView(detailsMarkerView);
+        mLineChart.setPositionMarker(new PositionMarker(this));
+        mLineChart.setRoundMarker(new RoundMarker(this));
+    }
+
+
+
+}
